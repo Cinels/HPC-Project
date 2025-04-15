@@ -81,7 +81,6 @@ void read_input( points_t *points ) {
     P = (float*)malloc( D * N * sizeof(*P) );
     assert(P);
 
-// #pragma omp parallel for reduce collapse
     for (int i=0; i<N; i++) {
         for (int k=0; k<D; k++) {
             if (1 != scanf("%f", &(P[i*D + k]))) {
@@ -130,15 +129,15 @@ int skyline( const points_t *points, int *s ) {
     const float *P = points->P;
     int r = N;
 
-// #pragma omp parallel for
+#pragma omp parallel for shared(s, N) default(none)
     for (int i=0; i<N; i++) {
         s[i] = 1;
     }
 
-// #pragma omp parallel for
+#pragma omp parallel shared(s, N, P, D) default(none) reduction(+:r)
     for (int i=0; i<N; i++) {
         if ( s[i] ) {
-// #pragma omp parallel for
+#pragma omp for
             for (int j=0; j<N; j++) {
                 if ( s[j] && dominates( &(P[i*D]), &(P[j*D]), D ) ) {
                     s[j] = 0;
