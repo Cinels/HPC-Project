@@ -129,15 +129,23 @@ int skyline( const points_t *points, int *s ) {
     const float *P = points->P;
     int r = N;
 
-#pragma omp parallel for shared(s, N) default(none)
+#if __GNUC__ < 9
+#pragma omp parallel for shared(s) default(none) schedule(static)
+#else
+#pragma omp parallel for shared(s, N) default(none) schedule(static)
+#endif
     for (int i=0; i<N; i++) {
         s[i] = 1;
     }
 
+#if __GNUC__ < 9
+#pragma omp parallel shared(s, P) default(none) reduction(+:r)
+#else
 #pragma omp parallel shared(s, N, P, D) default(none) reduction(+:r)
+#endif
     for (int i=0; i<N; i++) {
         if ( s[i] ) {
-#pragma omp for
+#pragma omp for schedule(static)
             for (int j=0; j<N; j++) {
                 if ( s[j] && dominates( &(P[i*D]), &(P[j*D]), D ) ) {
                     s[j] = 0;
