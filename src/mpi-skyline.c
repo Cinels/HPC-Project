@@ -40,6 +40,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <mpi.h>
 
 #include "hpc.h"
 
@@ -177,6 +178,8 @@ int main( int argc, char* argv[] )
 {
     points_t points;
 
+    MPI_Init(&argc, &argv);
+
     if (argc != 1) {
         fprintf(stderr, "Usage: %s < input_file > output_file\n", argv[0]);
         return EXIT_FAILURE;
@@ -194,6 +197,8 @@ int main( int argc, char* argv[] )
     fprintf(stderr, "\t%d dimensions\n", points.D);
     fprintf(stderr, "\t%d points in skyline\n\n", r);
     fprintf(stderr, "Execution time (s) %f\n", elapsed);
+
+    MPI_Finalize();
 
     free_points(&points);
     free(s);
