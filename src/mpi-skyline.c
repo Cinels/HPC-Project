@@ -2,7 +2,7 @@
  *
  * mpi-skyline.c - mpi implementaiton of the skyline operator
  *
- * Copyright (C) 2024 Lorenzo Cinelli
+ * Copyright (C) 2025 Lorenzo Cinelli
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@
  *
  * Per eseguire il programma:
  *
- *      ./mpi-skyline < input > output
+ *      mpirun [-n NPROC] --stdin 0 ./mpi-skyline < input > output
  *
  ****************************************************************************/
 
@@ -61,24 +61,23 @@ typedef struct {
  * pn-1,0 pn-1,1 ... pn-1,d-1
  *
  */
-void read_input( points_t *points )
-{
+void read_input( points_t *points ) {
     char buf[1024];
     int N, D;
     float *P;
 
     if (1 != scanf("%d", &D)) {
         fprintf(stderr, "FATAL: can not read the dimension\n");
-        exit(EXIT_FAILURE);
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
     assert(D >= 2);
     if (NULL == fgets(buf, sizeof(buf), stdin)) { /* ignore rest of the line */
         fprintf(stderr, "FATAL: can not read the first line\n");
-        exit(EXIT_FAILURE);
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
     if (1 != scanf("%d", &N)) {
         fprintf(stderr, "FATAL: can not read the number of points\n");
-        exit(EXIT_FAILURE);
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
     P = (float*)malloc( D * N * sizeof(*P) );
     assert(P);
@@ -86,7 +85,7 @@ void read_input( points_t *points )
         for (int k=0; k<D; k++) {
             if (1 != scanf("%f", &(P[i*D + k]))) {
                 fprintf(stderr, "FATAL: failed to get coordinate %d of point %d\n", k, i);
-                exit(EXIT_FAILURE);
+                MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
             }
         }
     }
@@ -95,16 +94,14 @@ void read_input( points_t *points )
     points->D = D;
 }
 
-void free_points( points_t* points )
-{
+void free_points( points_t* points ) {
     free(points->P);
     points->P = NULL;
     points->N = points->D = -1;
 }
 
 /* Returns 1 iff |p| dominates |q| */
-int dominates( const float * p, const float * q, int D )
-{
+int dominates( const float * p, const float * q, int D ) {
     /* The following loops could be merged, but the keep them separated
        for the sake of readability */
     for (int k=0; k<D; k++) {
@@ -126,8 +123,7 @@ int dominates( const float * p, const float * q, int D )
  * points that belongs to the skyline. The caller is responsible for
  * allocating the array `s` of length at least `points->N`.
  */
-int skyline( const points_t *points, int *s )
-{
+int skyline( const points_t *points, int *s ) {
     const int D = points->D;
     const int N = points->N;
     const float *P = points->P;
@@ -156,8 +152,7 @@ int skyline( const points_t *points, int *s )
  * The output format is the same as the input format, so that this
  * program can process its own output.
  */
-void print_skyline( const points_t* points, const int *s, int r )
-{
+void print_skyline( const points_t* points, const int *s, int r ) {
     const int D = points->D;
     const int N = points->N;
     const float *P = points->P;
@@ -174,29 +169,38 @@ void print_skyline( const points_t* points, const int *s, int r )
     }
 }
 
-int main( int argc, char* argv[] )
-{
+int main( int argc, char* argv[] ) {
     points_t points;
 
     MPI_Init(&argc, &argv);
-
     if (argc != 1) {
         fprintf(stderr, "Usage: %s < input_file > output_file\n", argv[0]);
+	MPI_Finalize();
         return EXIT_FAILURE;
     }
 
-    read_input(&points);
+    int my_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
+    if(my_rank == 0) {
+        read_input(&points);
+    }
     int *s = (int*)malloc(points.N * sizeof(*s));
     assert(s);
+
     const double tstart = hpc_gettime();
     const int r = skyline(&points, s);
     const double elapsed = hpc_gettime() - tstart;
-    print_skyline(&points, s, r);
+    if (my_rank == 0) {
+        print_skyline(&points, s, r);
+    }
 
-    fprintf(stderr, "\n\t%d points\n", points.N);
-    fprintf(stderr, "\t%d dimensions\n", points.D);
-    fprintf(stderr, "\t%d points in skyline\n\n", r);
-    fprintf(stderr, "Execution time (s) %f\n", elapsed);
+    if(my_rank == 0) {
+        fprintf(stderr, "\n\t%d points\n", points.N);
+        fprintf(stderr, "\t%d dimensions\n", points.D);
+        fprintf(stderr, "\t%d points in skyline\n\n", r);
+        fprintf(stderr, "Execution time (s) %f\n", elapsed);
+    }
 
     MPI_Finalize();
 
