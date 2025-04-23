@@ -24,14 +24,14 @@ time_sum=0
 echo "" > ./bench/serial/${input_name}.data
 
 for (( i="0" ; $i<$iterations ; i=$i+1 )); do
-    ./bin/skyline < ./input/${input_name}*.in > ./output/serial/${input_name}.out 2>./temp
+    ./bin/skyline < ./input/${input_name}*.in > ./output/serial/${input_name}.out 2>./.temp
 #    diff ./output/${input_name}-serial.out ./output/serial/${input_name}*.out;
 
-    time_string=`tail -n 1 ./temp`
+    time_string=`tail -n 1 ./.temp`
     echo "Iteration #$(($i+1)), ${time_string}" | tee -a ./bench/serial/${input_name}.data
     time_sum=$(echo ${time_sum} + ${time_string:19} | bc)
 done
 
 echo "Average execution time (s): $(echo "scale=6; ${time_sum} / ${iterations}" | bc)" | tee -a ./bench/serial/${input_name}.data
 
-rm -f ./temp
+rm -f ./.temp
