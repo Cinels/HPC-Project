@@ -168,10 +168,12 @@ int skyline( const points_t *points, int *s ) {
     MPI_Barrier(MPI_COMM_WORLD);
 
     for (int i=0; i<N; i++) {
-        for (int j=0; j<MY_N && rank*MY_N+j<N; j++) {
-            if ( my_s[j] && dominates( &(P[i*D]), &(P[(rank*MY_N+j)*D]), D ) ) {
-                my_s[j] = 0;
-                r--;
+        if( i<rank*MY_N || i>=(rank+1)*MY_N || (i>=rank*MY_N && i<(rank+1)*MY_N && my_s[i-rank*MY_N])) {
+            for (int j=0; j<MY_N && rank*MY_N+j<N; j++) {
+                if ( my_s[j] && dominates( &(P[i*D]), &(P[(rank*MY_N+j)*D]), D ) ) {
+                    my_s[j] = 0;
+                    r--;
+                }
             }
         }
     }
