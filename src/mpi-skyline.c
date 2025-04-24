@@ -130,35 +130,35 @@ int skyline( const points_t *points, int *s ) {
     int r;
     int result;
     int rank;
-    int pool_size;
+    int comm_size;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &pool_size);
+    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
 
     MPI_Bcast(
-	data_size,	/*Buffer*/
-	2,		/*Count*/
-	MPI_INT,	/*Datatype*/
-	0,		/*Source*/
-	MPI_COMM_WORLD	/*Communicator*/
+	data_size,	//Buffer
+	2,		//Count
+	MPI_INT,	//Datatype
+	0,		//Source
+	MPI_COMM_WORLD	//Communicator
     );
 
     const int D = data_size[0];
     const int N = data_size[1];
-    const int MY_N = (N + pool_size - 1) / pool_size;
-    r = (rank+1)*MY_N<=N ? MY_N : MY_N-(pool_size*MY_N-N);
-    my_s = (int*)malloc(MY_N * sizeof(*my_s));
+    const int MY_N = (N + comm_size - 1) / comm_size;
+    r=0;
+    my_s = (int*)malloc(MY_N * sizeof(*my_s)); assert(my_s);
 
     if(rank != 0) {
         P = (float*)malloc( D * N * sizeof(*P) ); assert(P);
     }
 
     MPI_Bcast(
-	P,		/*Buffer*/
-	N*D,		/*Count*/
-	MPI_FLOAT,	/*Datatype*/
-	0,		/*Source*/
-	MPI_COMM_WORLD	/*Communicator*/
+	P,		//Buffer
+	N*D,		//Count
+	MPI_FLOAT,	//Datatype
+	0,		//Source
+	MPI_COMM_WORLD	//Communicator
     );
 
     for (int i=0; i<MY_N; i++) {
@@ -179,24 +179,24 @@ int skyline( const points_t *points, int *s ) {
     }
 
     MPI_Gather(
-	my_s,		/*Send buffer*/
-	MY_N,		/*Send count*/
-	MPI_INT,	/*Send datatype*/
-	s,		/*Receive buffer*/
-	MY_N,		/*Receive count*/
-	MPI_INT,	/*Receive datatype*/
-	0,		/*Destination*/
-	MPI_COMM_WORLD	/*Communicator*/
+	my_s,		//Send buffer
+	MY_N,		//Send count
+	MPI_INT,	//Send datatype
+	s,		//Receive buffer
+	MY_N,		//Receive count
+	MPI_INT,	//Receive datatype
+	0,		//Destination
+	MPI_COMM_WORLD	//Communicator
     );
 
     MPI_Reduce(
-	&r,		/*Send buffer*/
-	&result,	/*Receive buffer*/
-	1,		/*Count*/
-	MPI_INT,	/*Datatype*/
-	MPI_SUM,	/*Operation*/
-	0,		/*Destination*/
-	MPI_COMM_WORLD	/*Communicator*/
+	&r,		//Send buffer
+	&result,	//Receive buffer
+	1,		//Count
+	MPI_INT,	//Datatype
+	MPI_SUM,	//Operation
+	0,		//Destination
+	MPI_COMM_WORLD	//Communicator
     );
 
     if(rank != 0) {
@@ -204,7 +204,7 @@ int skyline( const points_t *points, int *s ) {
     }
     free(my_s);
 
-    return result;
+    return result + N;
 }
 
 /**
@@ -241,12 +241,14 @@ int main( int argc, char* argv[] ) {
         return EXIT_FAILURE;
     }
 
-    int my_rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+    int rank;
+    int comm_size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
 
-    if(my_rank == 0) {
+    if(rank == 0) {
         read_input(&points);
-        s = (int*)malloc(points.N * sizeof(*s));
+        s = (int*)malloc((points.N + comm_size - 1) * sizeof(*s));
         assert(s);
     }
 
@@ -254,7 +256,7 @@ int main( int argc, char* argv[] ) {
     const int r = skyline(&points, s);
     const double elapsed = hpc_gettime() - tstart;
 
-    if (my_rank == 0) {
+    if (rank == 0) {
         print_skyline(&points, s, r);
 
         fprintf(stderr, "\n\t%d points\n", points.N);
@@ -263,7 +265,7 @@ int main( int argc, char* argv[] ) {
         fprintf(stderr, "Execution time (s) %f\n", elapsed);
 
         free_points(&points);
-        free(s);
+	free(s);
     }
 
     MPI_Finalize();
