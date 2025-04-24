@@ -11,3 +11,17 @@ fornito, oppure si puo' decidere di non usarlo ed effettuare la
 compilazione in modo manuale. In tal caso specificare in questo file i
 comandi da usare per la compilazione dei programmi.
 
+Per compilare la versione seriale utilizzare il comando:
+	gcc -std=c99 -Wall -Wpedantic -O2 skyline.c -o skyline
+Per eseguire la versione seriale utilizzare il comando:
+	./skyline < input > output
+
+Per compilare la versione OpenMP utilizzare il comando:
+	gcc -std=c99 -Wall -Wpedantic -O2 -fopenmp omp-skyline.c -o omp-skyline
+Per eseguire la versione OpenMP utilizzare il comando:
+	[OMP_NUM_THREADS=x] ./omp-skyline < input > output
+
+Per compilare la versione MPI utilizzare il comando:
+	mpicc -std=c99 -Wall -Wpedantic -O2 mpi-skyline.c -o mpi-skyline
+Per eseguire la versione MPI utilizzare il comando:
+	mpirun [-n x] --stdin 0 ./mpi-skyline < input > output
