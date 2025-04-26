@@ -119,7 +119,7 @@ int dominates( const float * p, const float * q, int D ) {
 
 /**
  * Compute the skyline of `points`. At the end, `s[i] == 1` iff point
- * `i` belongs to the skyline. The function returns the number `r` of
+ * `i` belongs to the skyline. The function returns the number `result` of
  * points that belongs to the skyline. The caller is responsible for
  * allocating the array `s` of length at least `points->N`.
  */
