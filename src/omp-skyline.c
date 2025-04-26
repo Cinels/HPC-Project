@@ -2,7 +2,7 @@
  *
  * omp-skyline.c - OpenMP implementaiton of the skyline operator
  *
- * Copyright (C) 2024 Lorenzo Cinelli
+ * Copyright (C) 2025 Lorenzo Cinelli, mat: 0001070967
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
