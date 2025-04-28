@@ -23,6 +23,7 @@ serial_time_sum=0
 omp_time_sum=0
 mpi_time_sum=0
 
+echo "" > ./bench/serial/${input_name}.data
 echo "" > ./bench/omp/${input_name}.data
 echo "" > ./bench/mpi/${input_name}.data
 
