@@ -19,7 +19,8 @@ elif [[ $# != "0" ]]; then
     exit 1;
 fi
 
-for (( num_threads="1" ; $num_threads<"5" ; num_threads=$num_threads+1 )); do
+#for (( num_threads="1" ; $num_threads<"5" ; num_threads=$num_threads+1 )); do
+num_threads=2
 
 	serial_time_sum=0
 	omp_time_sum=0
@@ -30,11 +31,11 @@ for (( num_threads="1" ; $num_threads<"5" ; num_threads=$num_threads+1 )); do
 
 	echo "p=$num_threads               omp       mpi"
 	for (( i="0" ; $i<$iterations ; i=$i+1 )); do
-	    OMP_NUM_THREADS=${num_threads} ./bin/omp-skyline < ./input/${input_name}*.in > ./output/serial-omp/${input_name}.out 2>./.omptemp
-	    mpirun --stdin 0 -n ${num_threads} ./bin/mpi-skyline < ./input/${input_name}*.in > ./output/serial-mpi/${input_name}.out 2>./.mpitemp
+	    OMP_NUM_THREADS=${num_threads} ./bin/omp-skyline < ./input/${input_name}*.in > ./output/omp/${input_name}.out 2>./.omptemp
+	    mpirun --stdin 0 -n ${num_threads} ./bin/mpi-skyline < ./input/${input_name}*.in > ./output/mpi/${input_name}.out 2>./.mpitemp
 
-	    diff ./output/omp/${input_name}.out ./output/serial/${input_name}*.out
-	    diff ./output/mpi/${input_name}.out ./output/serial/${input_name}*.out
+#	    diff ./output/omp/${input_name}.out ./output/serial/${input_name}*.out
+#	    diff ./output/mpi/${input_name}.out ./output/serial/${input_name}*.out
 
 	#    serial_time_string=`tail -n 1 ./.serialtemp`
 	    omp_time_string=`tail -n 1 ./.omptemp`
@@ -57,7 +58,7 @@ for (( num_threads="1" ; $num_threads<"5" ; num_threads=$num_threads+1 )); do
 	echo "Avg time (s):  $(echo "scale=6; x=${omp_time_sum} / ${iterations}; if(x<1) print 0; x" | bc), $(echo "scale=6; x=${mpi_time_sum} / ${iterations}; if(x<1) print 0; x" | bc)"
 	echo ""
 
-done
+#done
 
 
 rm -f ./.*temp
