@@ -165,8 +165,6 @@ int skyline( const points_t *points, int *s ) {
         my_s[i] = (rank*MY_N+i < N) ? 1 : 0;
     }
 
-//    MPI_Barrier(MPI_COMM_WORLD);
-
     for (int i=0; i<N; i++) {
         if( i<rank*MY_N || i>=(rank+1)*MY_N || (i>=rank*MY_N && i<(rank+1)*MY_N && my_s[i-rank*MY_N])) {
             for (int j=0; j<MY_N && rank*MY_N+j<N; j++) {
