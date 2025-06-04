@@ -29,7 +29,7 @@
  *
  * Per eseguire il programma:
  *
- *      ./omp-skyline < input > output
+ *      [OMP_NUM_THREADS=n] ./omp-skyline < input > output
  *
  ****************************************************************************/
 
